@@ -1,0 +1,6 @@
+ticker,stock_name,weight,reason
+AAPL,Apple Inc,30,Flagship holding driven by strong services growth
+MSFT,Microsoft Corp,25,Cloud dominance via Azure
+NVDA,NVIDIA Corp,20,AI hardware leader
+TSLA,Tesla Inc,15,EV expansion
+BABA,Alibaba Group,10,Undervalued e-commerce rebound
