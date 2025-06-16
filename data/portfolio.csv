@@ -1,6 +1,5 @@
 ticker,stock_name,weight,reason
-AAPL,Apple Inc,30,Flagship holding driven by strong services growth
-MSFT,Microsoft Corp,25,Cloud dominance via Azure
-NVDA,NVIDIA Corp,20,AI hardware leader
-TSLA,Tesla Inc,15,EV expansion
-BABA,Alibaba Group,10,Undervalued e-commerce rebound
+NVDA,NVIDIA Corp,34,Core AI hardware position; current price-volume trend and positive gamma exposure suggest upward momentum; short- to mid-term target around $150; current holding PnL: +0.33%
+HIMS,Hims & Hers Health,20,US equivalent of Meituan Medicine (channel + traffic + AI); range-bound recently but gamma exposure has turned positive; short-term target $60； mid-term $65; monitor for GEX reversal; current PnL: +6.96%
+GGLL,Direxion Daily Google Bull 2X ETF,33,Bullish on Google’s AI business; among top 7 US tech stocks； Google has room for price recovery (vs. Apple); short-term GOOGL target $180； mid-term $200; current PnL: +1.07%
+YANG,Direxion Daily FTSE China Bear 3X,11,Tactical hedge against short-term China macro risk; positioned while A-shares approach 3400 level; current PnL: -14.07%
