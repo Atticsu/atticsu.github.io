@@ -158,7 +158,7 @@ const HomePage = () => (
         </p>
         
         <div className="flex flex-wrap gap-4 mt-10">
-          <a href="mailto:15287836068wyh@gmail.com" className="group flex items-center space-x-2 px-6 py-3 bg-white text-black font-bold rounded hover:bg-zinc-200 transition-colors">
+          <a href="mailto:contact.yuhan@gmail.com" className="group flex items-center space-x-2 px-6 py-3 bg-white text-black font-bold rounded hover:bg-zinc-200 transition-colors">
             <Mail size={18} /> <span>CONTACT ME</span>
             <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform"/>
           </a>

@@ -157,7 +157,7 @@ const homeContent = {
 const resumeContent = {
   en: {
     title: 'Resume',
-    subtitle: 'Data & Finance dual-degree candidate focused on GAN-based SDF modeling, LSTM macro factor extraction, and theme-driven alpha. Seeking a Quantitative Research internship in France (Mar 23 - Aug 31, 2026).',
+    subtitle: 'Data & Finance dual-degree candidate with hands-on experience building GAN-based SDF models, LSTM macro factor extraction, and theme-driven alpha signals. Skilled in NLP, alternative data, and high-frequency options analytics. Seeking a Quantitative Research internship in France from March 23 to August 31, 2026.',
     openPdf: 'Open PDF',
     educationTitle: 'Education',
     experienceTitle: 'Internship Experience',
@@ -169,71 +169,61 @@ const resumeContent = {
         location: 'Paris, France',
         period: 'September 2025 - June 2027',
         title: "Dual Master's Degree in Data Science & Finance",
-        note: 'Data & Finance dual-degree candidate; seeking Quant Research internship in France (Mar 23 - Aug 31, 2026).',
+        note: 'Core courses: Machine Learning, Deep Learning and Optimization, Algorithmic Trading, Stochastic Calculus, Asset Pricing.',
       },
       {
         school: 'Fudan University, School of Economics',
         location: 'Shanghai, China',
         period: 'September 2021 - June 2025',
-        title: 'Bachelor of Economics, Finance (GPA: 91/100)',
-        note: 'Graduated with strong quantitative finance foundation.',
+        title: 'Bachelor of Economics, Finance',
+        note: 'Core courses: Machine Learning, Stochastic Processes, Financial Engineering & Derivatives Pricing, Algorithms.',
       },
     ],
     experiences: [
       {
+        company: 'Pinnace Asset Management',
+        location: 'Shanghai, China',
+        title: 'Quantitative Researcher Intern, Alpha Team',
+        period: 'November 2023 - July 2024; January 2025 - March 2025',
+        bullets: [
+          'Designed a nonlinear asset pricing architecture grounded in no-arbitrage principles, engineering an adversarial learning framework to estimate a flexible SDF from high-dimensional firm characteristics. Developed custom GAN-based components to identify stress points in pricing conditions, enabling the model to capture intricate interaction structures that linear asset pricing frameworks cannot represent.',
+          'Developed multi-layered alpha signals by structuring alternative data—including investor text sentiment, retail-attention proxies, comment-volume dynamics, and option-implied positioning metrics such as gamma-exposure—into tradable features. Integrated these heterogeneous signals into a coherent decision engine that supports short-horizon trading and thematic screening.',
+          'Engineered predictive factors from complex economic and micro-structural datasets by modeling nonlinear dependencies with recurrent architectures. Extracted latent macroeconomic states using customized LSTM modules and constructed structural industry indicators—such as bubble-intensity proxies derived from supply-chain networks and momentum cascades—to enhance systematic risk decomposition.',
+        ],
+      },
+      {
         company: 'QianXiang Asset Management',
         location: 'Shanghai, China',
         title: 'Quantitative Researcher Intern, Equity Trading Team',
-        period: 'July 2024 - November 2024',
+        period: 'August 2024 – October 2024',
         bullets: [
-          'Built a hot-theme selection strategy using Hugging Face embeddings to cluster financial news; extracted themes with TF-IDF and monitored heat via Baidu Index.',
-          'Developed a theme investment strategy around policy, macro data, and performance events; implemented dynamic theme-based portfolio rebalancing with correlation and importance scores.',
-          'Automated scraping with Fiddler and Selenium for policy text and event data to supply the research pipeline.',
-        ],
-      },
-      {
-        company: 'Pinnacle Asset Management',
-        location: 'Shanghai, China',
-        title: 'Quantitative Researcher Intern, Alpha Team',
-        period: 'November 2023 - July 2024',
-        bullets: [
-          'Engineered a GAN-based SDF model with a no-arbitrage objective to capture non-linear risk premia from high-dimensional characteristics, outperforming linear baselines.',
-          'Built and backtested multiple alpha strategies: sentiment-driven signals from a proprietary LLM delivered 14% annualized return with >65% hit rate on high-beta names; options-based short-term signal from gamma exposure (GEX) and open interest.',
-          'Modeled complex data with LSTM-derived macro state factors and an industry bubble intensity factor using supply chain graphs and momentum.',
-        ],
-      },
-      {
-        company: 'GuoTai Junan Security',
-        location: 'Shanghai, China',
-        title: 'Analyst Intern, Chemicals Industry Team',
-        period: 'June 2023 - November 2023',
-        bullets: [
-          'Published a report on Huafeng Chemical and the spandex industry, covering production chain, financial operations, and peer comparisons during downturns.',
-          'Built and maintained a visual database of chemical raw material inventory quantiles in Excel for daily use.',
+          'Designed a theme-extraction engine by engineering custom word-embedding and clustering algorithms to structure financial news into latent topic spaces. Built a real-time theme-heat monitoring system that quantified attention dynamics to support alpha discovery.',
+          'Constructed an event-driven thematic investment model by systematically encoding policy shifts, macro releases, and earnings signals into structured event vectors. Developed a dynamic, correlation-aware theme-rotation framework using event taxonomy, cross-theme dependency, and importance weighting.',
+          'Built a fully automated data pipeline using advanced web-scraping and traffic-capture techniques to collect policy texts, event streams, and market narratives. Structured unrefined text into analytics-ready datasets that served as the foundation for NLP factor research and event-based strategy modeling.',
         ],
       },
     ],
     projects: [
       {
-        title: 'Fund Manager Partisan Speech Recognition',
-        role: 'Research Assistant • Prof. Lin Sun, Fudan University, FISF',
+        title: 'Fund Manager Partisan Speech Recognize Program',
+        role: "Research Assistant • Professor Lin Sun, Fudan University's FISF",
         location: 'Shanghai, China',
-        period: 'September 2023 - June 2024',
+        period: 'September 2023 – August 2024',
         bullets: [
-          'Scraped a decade of Twitter statements from fund managers and U.S. lawmakers (Python Requests) and performed sentiment analysis to classify political affiliation.',
-          "Fine-tuned Google's Inception-v4 with PyTorch on ByteDance's image sentiment dataset; adapted output layers to capture emotional signals from images paired with tweets.",
+          'Engineered a large-scale text analytics pipeline to harvest and structure a decade of public communications from U.S. lawmakers and institutional fund managers. Built classification and sentiment-inference modules that uncovered ideological and behavioral patterns through linguistic embeddings and signal-processing of speech content.',
+          'Designed and fine-tuned a high-capacity vision-based sentiment model, extending deep convolutional architectures to interpret emotional signals embedded in images paired with financial commentary. Integrated multimodal outputs with text-based sentiment systems to construct enriched behavioral features for downstream quantitative analysis.',
         ],
       },
     ],
     skills: [
-      { label: 'Languages', value: 'English (IELTS 7.5, GRE 323), Mandarin (Native)' },
+      { label: 'Languages', value: 'English (IELTS 7.5, GRE 323), Mandarin (Native), French (Beginner)' },
       { label: 'Computer', value: 'Python, C++, Java' },
       { label: 'Certifications', value: 'C++ Programming for Financial Engineering (with Distinction), Baruch College' },
     ],
   },
   zh: {
     title: '简历',
-    subtitle: '数据与金融双学位在读，关注基于 GAN 的 SDF 建模、LSTM 宏观因子提取与主题驱动 Alpha。寻求 2026/3/23 - 8/31 法国量化研究实习机会。',
+    subtitle: '数据与金融双学位，实操 GAN-SDF 模型、LSTM 宏观因子提取与主题 Alpha 信号，熟悉 NLP、另类数据与高频期权分析。寻求 2026/3/23 - 8/31 在法国的量化研究实习机会。',
     openPdf: '打开 PDF',
     educationTitle: '教育经历',
     experienceTitle: '实习经历',
@@ -245,47 +235,37 @@ const resumeContent = {
         location: '巴黎，法国',
         period: '2025 年 9 月 - 2027 年 6 月',
         title: '数据科学与金融双硕士',
-        note: '数据与金融双学位候选人；寻求 2026/3/23-8/31 法国量化研究实习。',
+        note: '核心课程：机器学习、深度学习与优化、算法交易、随机微积分、资产定价。',
       },
       {
         school: '复旦大学 经济学院',
         location: '上海，中国',
         period: '2021 年 9 月 - 2025 年 6 月',
-        title: '经济学学士，金融（GPA: 91/100）',
-        note: '扎实的数量金融基础。',
+        title: '经济学学士，金融',
+        note: '核心课程：机器学习、随机过程、金融工程与衍生品定价、算法。',
       },
     ],
     experiences: [
       {
+        company: 'Pinnace Asset Management',
+        location: '上海，中国',
+        title: '量化研究员实习生，Alpha 组',
+        period: '2023 年 11 月 - 2024 年 7 月；2025 年 1 月 - 2025 年 3 月',
+        bullets: [
+          '设计带无套利约束的非线性资产定价框架，搭建对抗学习体系估计可灵活拟合高维特征的 SDF，并用自定义 GAN 组件识别定价约束中的压力点，捕捉线性模型无法表示的复杂交互。',
+          '将另类数据（投资者文本情绪、散户关注度、评论量变化、期权 Gamma 暴露等）结构化为可交易特征，构建多层 Alpha 信号并整合为支持短周期交易与主题筛选的决策引擎。',
+          '利用循环网络建模经济与微观结构数据的非线性依赖，提取自定义 LSTM 宏观状态因子，结合供应链网络与动量构造行业泡沫强度等结构性指标，强化系统性风险分解。',
+        ],
+      },
+      {
         company: '乾象资产',
         location: '上海，中国',
         title: '量化研究员实习生，股票交易组',
-        period: '2024 年 7 月 - 2024 年 11 月',
+        period: '2024 年 8 月 - 2024 年 10 月',
         bullets: [
-          '用 Hugging Face 向量聚类财经新闻做热点题材选股；TF-IDF 抽取主题并用百度指数监控热度。',
-          '围绕政策、宏观数据与业绩事件构建题材轮动策略；用相关性与重要度打分做动态调仓。',
-          '用 Fiddler + Selenium 自动抓取政策文本和事件数据，补充研究管线。',
-        ],
-      },
-      {
-        company: '巅峰资产管理',
-        location: '上海，中国',
-        title: '量化研究员实习生，Alpha 组',
-        period: '2023 年 11 月 - 2024 年 7 月',
-        bullets: [
-          '搭建带无套利约束的 GAN-SDF 模型，从高维特征中提取非线性风险溢价，优于线性基线。',
-          '构建多条 Alpha：内部大模型生成情绪信号，针对高 β 股票年化约 14%、命中率 65% 以上；期权 Gamma 暴露 (GEX) + 未平仓量做短线信号。',
-          '用 LSTM 推断宏观状态因子，并结合供应链图与动量构造行业泡沫强度因子。',
-        ],
-      },
-      {
-        company: '国泰君安证券',
-        location: '上海，中国',
-        title: '行业分析实习生，化工组',
-        period: '2023 年 6 月 - 2023 年 11 月',
-        bullets: [
-          '撰写华峰化学及氨纶行业报告，覆盖产业链、财务运营与低景气对比。',
-          '搭建化工原料库存分位数可视化数据库，供团队日常使用。',
+          '设计定制词向量与聚类算法，构建财经新闻的主题嵌入与实时热度监控，支撑 Alpha 挖掘。',
+          '将政策、宏观数据、业绩信号编码为结构化事件向量，基于事件分类、主题依赖与重要度构建相关性敏感的动态题材轮动框架。',
+          '用高级抓包与自动化爬虫采集政策文本、事件流与市场叙事，清洗为可用于 NLP 因子研究与事件驱动策略建模的分析级数据集。',
         ],
       },
     ],
@@ -294,15 +274,15 @@ const resumeContent = {
         title: '基金经理政治倾向识别',
         role: '研究助理 • 孙霖教授，复旦大学泛海国际金融学院',
         location: '上海，中国',
-        period: '2023 年 9 月 - 2024 年 6 月',
+        period: '2023 年 9 月 - 2024 年 8 月',
         bullets: [
-          '抓取基金经理与美国议员十年推文（Python Requests），情感分析识别政治倾向。',
-          '微调 Google Inception-v4（PyTorch）使用字节跳动图像情感数据集；调整输出层以捕捉推文配图的情绪信号。',
+          '搭建大规模文本分析流水线，抓取并结构化美国议员与机构基金经理十年公开发言；构建分类与情感推断模块，通过语言嵌入与信号处理揭示意识形态与行为模式。',
+          '设计并微调高容量视觉情绪模型，扩展卷积网络以解读金融评论配图的情绪信号；将多模态输出与文本情绪系统融合，构建下游量化分析的行为特征。',
         ],
       },
     ],
     skills: [
-      { label: '语言', value: '英语（IELTS 7.5，GRE 323），中文（母语）' },
+      { label: '语言', value: '英语（IELTS 7.5，GRE 323），中文（母语），法语（初级）' },
       { label: '计算机', value: 'Python, C++, Java' },
       { label: '证书', value: 'C++ 金融工程（优等），巴鲁克学院' },
     ],
@@ -612,7 +592,7 @@ const HomePage = ({ language }) => {
           </p>
           
           <div className="flex flex-wrap gap-4 mt-10">
-            <a href="mailto:15287836068wyh@gmail.com" className="group flex items-center space-x-2 px-6 py-3 bg-white text-black font-bold rounded hover:bg-zinc-200 transition-colors">
+            <a href="mailto:contact.yuhan@gmail.com" className="group flex items-center space-x-2 px-6 py-3 bg-white text-black font-bold rounded hover:bg-zinc-200 transition-colors">
               <Mail size={18} /> <span>{copy.contact}</span>
               <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform"/>
             </a>
@@ -676,7 +656,7 @@ const ResumePage = ({ language }) => {
       <div className="flex justify-between items-end border-b border-zinc-800 pb-6">
         <div className="space-y-2">
           <h2 className="text-4xl font-bold text-white tracking-tight">{copy.title}</h2>
-          <p className="text-zinc-300 font-mono text-sm">Yuhan Wu • 15287836068wyh@gmail.com • +33 749845277 • yuhanwu.cn</p>
+          <p className="text-zinc-300 font-mono text-sm">Yuhan Wu • contact.yuhan@gmail.com • +33 749845277 • https://www.yuhanwu.cn</p>
           <p className="text-zinc-500 text-sm leading-relaxed">
             {copy.subtitle}
           </p>
