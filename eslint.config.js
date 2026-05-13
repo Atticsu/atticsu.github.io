@@ -23,7 +23,15 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      'no-unused-vars': [
+        'error',
+        {
+          varsIgnorePattern: '^[A-Z_]',
+          argsIgnorePattern: '^(_|[A-Z])',
+          destructuredArrayIgnorePattern: '^(_|[A-Z])',
+          ignoreRestSiblings: true,
+        },
+      ],
     },
   },
 ])
