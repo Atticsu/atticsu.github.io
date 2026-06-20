@@ -2,6 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/monitor-data/:path*",
+      "destination": "/api/monitor-data?path=:path*"
+    },
+    {
       "source": "/strategy-monitor/:path*",
       "destination": "/index.html"
     },
