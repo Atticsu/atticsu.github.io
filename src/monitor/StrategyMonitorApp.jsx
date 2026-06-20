@@ -29,6 +29,14 @@ import Reveal from '../components/Reveal';
 const DATA_BASE = (import.meta.env.VITE_MONITOR_DATA_BASE || '/monitor-data').replace(/\/$/, '');
 const PIE_COLORS = ['#f5b056', '#5b8cff', '#fcd9a6', '#9a958a', '#3f6cdb', '#a6bfff', '#d7913a'];
 
+const rangePresets = [
+  { key: 'all', months: null },
+  { key: 'ytd', months: 'ytd' },
+  { key: '1y', months: 12 },
+  { key: '6m', months: 6 },
+  { key: '3m', months: 3 },
+];
+
 const copyByLanguage = {
   en: {
     eyebrow: 'PRIVATE PAPER ACCOUNT',
@@ -52,6 +60,21 @@ const copyByLanguage = {
       targets: 'Next targets',
       trades: 'Recent trades',
     },
+    range: {
+      title: 'Selected range',
+      start: 'Start',
+      end: 'End',
+      rangeReturn: 'Range gain (end - start)',
+      relativeReturn: 'Range return',
+      pnl: 'P&L',
+      presets: {
+        all: 'ALL',
+        ytd: 'YTD',
+        '1y': '1Y',
+        '6m': '6M',
+        '3m': '3M',
+      },
+    },
     labels: {
       status: 'Status',
       benchmark: 'Benchmark',
@@ -64,6 +87,7 @@ const copyByLanguage = {
       rule: 'Rule',
       source: 'Source label',
       code: 'Code',
+      name: 'Name',
       asset: 'Asset',
       shares: 'Shares',
       close: 'Close',
@@ -101,6 +125,21 @@ const copyByLanguage = {
       targets: '目标仓位',
       trades: '近期交易',
     },
+    range: {
+      title: '所选区间',
+      start: '开始',
+      end: '结束',
+      rangeReturn: '区间收益（末日-起日）',
+      relativeReturn: '区间收益率',
+      pnl: '区间盈亏',
+      presets: {
+        all: '全部',
+        ytd: '今年',
+        '1y': '1年',
+        '6m': '6月',
+        '3m': '3月',
+      },
+    },
     labels: {
       status: '状态',
       benchmark: '基准',
@@ -113,6 +152,7 @@ const copyByLanguage = {
       rule: '执行规则',
       source: '策略标签',
       code: '代码',
+      name: '名称',
       asset: '资产',
       shares: '数量',
       close: '收盘',
@@ -149,6 +189,8 @@ const formatPct = (value, digits = 2) => {
   return `${(Number(value) * 100).toFixed(digits)}%`;
 };
 
+const toIsoDate = (date) => date.toISOString().slice(0, 10);
+
 const fetchJson = async (url) => {
   const response = await fetch(url, { cache: 'no-store' });
   if (!response.ok) throw new Error(`Failed to fetch ${url}`);
@@ -183,6 +225,8 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [reloadTick, setReloadTick] = useState(0);
+  const [equityStartDate, setEquityStartDate] = useState('');
+  const [equityEndDate, setEquityEndDate] = useState('');
 
   useEffect(() => {
     let alive = true;
@@ -238,8 +282,64 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
 
   const snapshot = bundle?.snapshot;
   const currency = snapshot?.currency || 'CNY';
+  const equityRows = bundle?.equity || [];
+  const firstEquityDate = equityRows[0]?.date || '';
+  const lastEquityDate = equityRows[equityRows.length - 1]?.date || '';
   const positiveTargets = (bundle?.targets || []).filter((row) => Number(row.targetWeight) > 0);
   const latestDate = latestValue(snapshot, 'date') || selectedEntry?.latestDate || '—';
+
+  useEffect(() => {
+    if (!firstEquityDate || !lastEquityDate) return;
+    setEquityStartDate(firstEquityDate);
+    setEquityEndDate(lastEquityDate);
+  }, [selectedEntry?.id, firstEquityDate, lastEquityDate]);
+
+  const selectedEquity = useMemo(() => {
+    if (!equityRows.length) return [];
+    const start = equityStartDate || firstEquityDate;
+    const end = equityEndDate || lastEquityDate;
+    const rows = equityRows.filter((row) => row.date >= start && row.date <= end);
+    return rows.length ? rows : equityRows;
+  }, [equityRows, equityStartDate, equityEndDate, firstEquityDate, lastEquityDate]);
+
+  const rangeStats = useMemo(() => {
+    if (!selectedEquity.length) return null;
+    const start = selectedEquity[0];
+    const end = selectedEquity[selectedEquity.length - 1];
+    const startNet = Number(start.netValue);
+    const endNet = Number(end.netValue);
+    const startEquity = Number(start.equity);
+    const endEquity = Number(end.equity);
+    return {
+      startDate: start.date,
+      endDate: end.date,
+      netChange: endNet - startNet,
+      relativeReturn: startNet ? endNet / startNet - 1 : null,
+      pnl: endEquity - startEquity,
+      points: selectedEquity.length,
+    };
+  }, [selectedEquity]);
+
+  const applyRangePreset = (preset) => {
+    if (!firstEquityDate || !lastEquityDate) return;
+    if (preset.months === null) {
+      setEquityStartDate(firstEquityDate);
+      setEquityEndDate(lastEquityDate);
+      return;
+    }
+    const end = lastEquityDate;
+    let start = firstEquityDate;
+    if (preset.months === 'ytd') {
+      start = `${end.slice(0, 4)}-01-01`;
+    } else {
+      const date = new Date(`${end}T00:00:00`);
+      date.setMonth(date.getMonth() - Number(preset.months));
+      start = toIsoDate(date);
+    }
+    const firstInRange = equityRows.find((row) => row.date >= start)?.date || firstEquityDate;
+    setEquityStartDate(firstInRange);
+    setEquityEndDate(end);
+  };
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-ink-950 text-bone-100 font-sans">
@@ -332,22 +432,74 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
             <Reveal delay={120}>
               <section className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_0.85fr]">
                 <div className="rounded-xl border border-ink-700/70 bg-ink-900/45 p-5 md:p-7">
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                     <div>
                       <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-lamp-500">{copy.tabs.curve}</p>
                       <h2 className="mt-2 font-display text-3xl text-bone-50">{snapshot.displayName}</h2>
                     </div>
-                    <a
-                      href="https://www.yuhanwu.cn/"
-                      className="hidden items-center gap-2 rounded-full border border-ink-700/70 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.22em] text-bone-400 hover:border-lamp-500/70 hover:text-lamp-300 md:inline-flex"
-                    >
-                      Main site
-                      <ArrowUpRight size={12} />
-                    </a>
+                    <div className="grid gap-3 rounded-lg border border-ink-700/70 bg-ink-950/35 p-3 xl:min-w-[420px]">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-bone-500">{copy.range.title}</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {rangePresets.map((preset) => (
+                            <button
+                              key={preset.key}
+                              type="button"
+                              onClick={() => applyRangePreset(preset)}
+                              className="rounded-full border border-ink-700/70 px-2.5 py-1 font-mono text-[10px] text-bone-300 hover:border-lamp-500/70 hover:text-lamp-300"
+                            >
+                              {copy.range.presets[preset.key]}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <label className="grid gap-1 font-mono text-[10px] uppercase tracking-[0.18em] text-bone-500">
+                          {copy.range.start}
+                          <input
+                            type="date"
+                            min={firstEquityDate}
+                            max={equityEndDate || lastEquityDate}
+                            value={equityStartDate}
+                            onChange={(event) => {
+                              const value = event.target.value;
+                              setEquityStartDate(value);
+                              if (equityEndDate && value > equityEndDate) setEquityEndDate(value);
+                            }}
+                            className="h-9 rounded-md border border-ink-700 bg-ink-950 px-2 font-mono text-xs text-bone-200 outline-none focus:border-lamp-500/70"
+                          />
+                        </label>
+                        <label className="grid gap-1 font-mono text-[10px] uppercase tracking-[0.18em] text-bone-500">
+                          {copy.range.end}
+                          <input
+                            type="date"
+                            min={equityStartDate || firstEquityDate}
+                            max={lastEquityDate}
+                            value={equityEndDate}
+                            onChange={(event) => setEquityEndDate(event.target.value)}
+                            className="h-9 rounded-md border border-ink-700 bg-ink-950 px-2 font-mono text-xs text-bone-200 outline-none focus:border-lamp-500/70"
+                          />
+                        </label>
+                      </div>
+                      <div className="grid gap-2 sm:grid-cols-3">
+                        <div>
+                          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bone-500">{copy.range.rangeReturn}</p>
+                          <p className="mt-1 font-mono text-base text-lamp-300">{formatPct(rangeStats?.netChange)}</p>
+                        </div>
+                        <div>
+                          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bone-500">{copy.range.relativeReturn}</p>
+                          <p className="mt-1 font-mono text-base text-bone-100">{formatPct(rangeStats?.relativeReturn)}</p>
+                        </div>
+                        <div>
+                          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bone-500">{copy.range.pnl}</p>
+                          <p className="mt-1 font-mono text-base text-bone-100">{formatCurrency(rangeStats?.pnl, currency)}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <div className="mt-7 h-[360px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={bundle.equity} margin={{ top: 20, right: 22, left: 0, bottom: 0 }}>
+                      <ComposedChart data={selectedEquity} margin={{ top: 20, right: 22, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="monitorLampArea" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0%" stopColor="#f5b056" stopOpacity={0.42} />
@@ -400,7 +552,7 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                   <div className="mt-5 h-[220px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={bundle.positions} dataKey="weight" nameKey="tsCode" innerRadius={56} outerRadius={88} paddingAngle={2} stroke="none">
+                        <Pie data={bundle.positions} dataKey="weight" nameKey="name" innerRadius={56} outerRadius={88} paddingAngle={2} stroke="none">
                           {bundle.positions.map((entry, index) => <Cell key={entry.tsCode} fill={PIE_COLORS[index % PIE_COLORS.length]} />)}
                         </Pie>
                         <Tooltip contentStyle={{ backgroundColor: 'rgba(13,13,18,0.96)', border: '1px solid #22222e', borderRadius: 8 }} formatter={(value) => formatPct(value)} />
@@ -410,7 +562,7 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                   <ul className="mt-4 grid gap-2 font-mono text-[11px] text-bone-400">
                     {bundle.positions.map((position, index) => (
                       <li key={position.tsCode} className="flex items-center justify-between rounded-lg border border-ink-700/60 bg-ink-800/35 px-3 py-2">
-                        <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }} />{position.tsCode}</span>
+                        <span className="flex min-w-0 items-center gap-2"><span className="h-1.5 w-1.5 flex-none rounded-full" style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }} /><span className="truncate">{position.tsCode} {position.name || ''}</span></span>
                         <span>{formatPct(position.weight)}</span>
                       </li>
                     ))}
@@ -420,10 +572,11 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                 <div className="overflow-hidden rounded-xl border border-ink-700/70 bg-ink-900/45">
                   <div className="border-b border-ink-700/60 bg-ink-800/50 px-5 py-3 font-mono text-[10px] uppercase tracking-[0.24em] text-lamp-500">{copy.tabs.positions}</div>
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[720px] text-left text-sm">
+                    <table className="w-full min-w-[820px] text-left text-sm">
                       <thead className="font-mono text-[10px] uppercase tracking-[0.22em] text-bone-500">
                         <tr className="border-b border-ink-700/60">
                           <th className="px-4 py-3 font-normal">{copy.labels.code}</th>
+                          <th className="px-4 py-3 font-normal">{copy.labels.name}</th>
                           <th className="px-4 py-3 font-normal">{copy.labels.shares}</th>
                           <th className="px-4 py-3 font-normal">{copy.labels.close}</th>
                           <th className="px-4 py-3 font-normal">{copy.labels.value}</th>
@@ -435,13 +588,14 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                         {bundle.positions.length ? bundle.positions.map((position) => (
                           <tr key={position.tsCode} className="hover:bg-ink-800/35">
                             <td className="px-4 py-3 font-mono text-lamp-300">{position.tsCode}</td>
+                            <td className="px-4 py-3 text-bone-200">{position.name || '—'}</td>
                             <td className="px-4 py-3 font-mono text-bone-300">{position.shares}</td>
                             <td className="px-4 py-3 font-mono text-bone-300">{formatNumber(position.close, 3)}</td>
                             <td className="px-4 py-3 font-mono text-bone-300">{formatCurrency(position.marketValue, currency)}</td>
                             <td className="px-4 py-3 font-mono text-bone-300">{formatPct(position.weight)}</td>
                             <td className="px-4 py-3 font-mono text-bone-300">{formatPct(position.targetWeight)}</td>
                           </tr>
-                        )) : <tr><td colSpan={6} className="px-4 py-4 text-bone-500">{copy.labels.empty}</td></tr>}
+                        )) : <tr><td colSpan={7} className="px-4 py-4 text-bone-500">{copy.labels.empty}</td></tr>}
                       </tbody>
                     </table>
                   </div>
@@ -453,6 +607,7 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
               <section className="mt-6 grid gap-6 lg:grid-cols-2">
                 <DataTable title={copy.tabs.targets} rows={positiveTargets} empty={copy.labels.empty} columns={[
                   [copy.labels.code, (row) => row.tsCode, 'text-lamp-300'],
+                  [copy.labels.name, (row) => row.name || '—'],
                   [copy.labels.asset, (row) => row.assetType],
                   [copy.labels.target, (row) => formatPct(row.targetWeight)],
                   ['Signal', (row) => row.signalDate],
@@ -460,6 +615,7 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                 <DataTable title={copy.tabs.trades} rows={(bundle.trades || []).slice().reverse().slice(0, 12)} empty={copy.labels.empty} columns={[
                   ['Date', (row) => row.date],
                   [copy.labels.code, (row) => row.tsCode, 'text-lamp-300'],
+                  [copy.labels.name, (row) => row.name || '—'],
                   [copy.labels.side, (row) => row.side],
                   [copy.labels.shares, (row) => row.shares],
                   [copy.labels.notional, (row) => formatCurrency(row.notional, currency)],
@@ -488,7 +644,7 @@ const DataTable = ({ title, rows, columns, empty }) => (
           {rows.length ? rows.map((row, idx) => (
             <tr key={`${title}-${idx}`} className="hover:bg-ink-800/35">
               {columns.map(([label, getValue, className = 'text-bone-300']) => (
-                <td key={label} className={`px-4 py-3 font-mono ${className}`}>{getValue(row)}</td>
+                <td key={label} className={`px-4 py-3 ${className}`}>{getValue(row)}</td>
               ))}
             </tr>
           )) : <tr><td colSpan={columns.length} className="px-4 py-4 text-bone-500">{empty}</td></tr>}
