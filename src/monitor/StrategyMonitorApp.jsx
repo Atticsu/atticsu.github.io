@@ -110,12 +110,17 @@ const copyByLanguage = {
       mode: 'Mode',
       sourceEnd: 'Source end',
       latestTarget: 'Latest target',
+      nativeTarget: 'Native signal',
       latestPrice: 'Latest price',
       targetFreshness: 'Target freshness',
+      signalFreshness: 'Signal freshness',
+      targetRefreshMode: 'Target refresh',
       stale: 'Stale target stream',
+      staleSignal: 'Native signal stale',
       current: 'Current',
       pending: 'Pending',
       orders: 'Orders',
+      priceSource: 'Price source',
       empty: 'No rows',
       loading: 'Loading monitor feed',
       error: 'Unable to load monitor feed',
@@ -192,12 +197,17 @@ const copyByLanguage = {
       mode: '模式',
       sourceEnd: '源 run 截止',
       latestTarget: '最新目标',
+      nativeTarget: '原生信号',
       latestPrice: '最新行情',
       targetFreshness: '目标新鲜度',
+      signalFreshness: '信号新鲜度',
+      targetRefreshMode: '目标刷新',
       stale: '目标流已落后',
+      staleSignal: '原生信号落后',
       current: '当前',
       pending: '待执行',
       orders: '订单数',
+      priceSource: '价格来源',
       empty: '暂无记录',
       loading: '正在加载监控数据',
       error: '无法加载监控数据',
@@ -590,8 +600,11 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                       <div className="flex justify-between gap-4"><dt className="text-bone-500">{copy.labels.mode}</dt><dd className="font-mono text-bone-200">{paper.mode || '—'}</dd></div>
                       <div className="flex justify-between gap-4"><dt className="text-bone-500">{copy.labels.sourceEnd}</dt><dd className="font-mono text-bone-200">{paper.sourceEndDate || '—'}</dd></div>
                       <div className="flex justify-between gap-4"><dt className="text-bone-500">{copy.labels.latestTarget}</dt><dd className="font-mono text-bone-200">{paper.latestTargetDate || '—'}</dd></div>
+                      <div className="flex justify-between gap-4"><dt className="text-bone-500">{copy.labels.nativeTarget}</dt><dd className="font-mono text-bone-200">{paper.nativeLatestTargetDate || '—'}</dd></div>
                       <div className="flex justify-between gap-4"><dt className="text-bone-500">{copy.labels.latestPrice}</dt><dd className="font-mono text-bone-200">{paper.latestPriceDate || '—'}</dd></div>
                       <div className="flex justify-between gap-4"><dt className="text-bone-500">{copy.labels.targetFreshness}</dt><dd className={`font-mono ${paper.targetStreamStale ? 'text-lamp-300' : 'text-bone-200'}`}>{paper.targetStreamStale ? copy.labels.stale : copy.labels.current}</dd></div>
+                      <div className="flex justify-between gap-4"><dt className="text-bone-500">{copy.labels.signalFreshness}</dt><dd className={`font-mono ${paper.nativeSignalStale ? 'text-lamp-300' : 'text-bone-200'}`}>{paper.nativeSignalStale ? copy.labels.staleSignal : copy.labels.current}</dd></div>
+                      <div className="flex justify-between gap-4"><dt className="text-bone-500">{copy.labels.targetRefreshMode}</dt><dd className="font-mono text-bone-200">{paper.targetRefresh?.mode || '—'}</dd></div>
                       <div className="flex justify-between gap-4"><dt className="text-bone-500">{copy.labels.pending}</dt><dd className="font-mono text-bone-200">{pendingOrders.length}</dd></div>
                       <div className="flex justify-between gap-4"><dt className="text-bone-500">{copy.labels.orders}</dt><dd className="font-mono text-bone-200">{paper.orders ?? orders.length}</dd></div>
                     </dl>
@@ -678,6 +691,7 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                   [copy.labels.desired, (row) => row.desiredShares],
                   [copy.labels.ordered, (row) => row.orderShares],
                   [copy.labels.notional, (row) => formatCurrency(row.estimatedNotional, currency)],
+                  [copy.labels.priceSource, (row) => row.priceSource || '—'],
                   [copy.labels.status, (row) => row.status],
                   [copy.labels.reason, (row) => row.reason],
                 ]} />
