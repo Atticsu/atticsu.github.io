@@ -1,5 +1,5 @@
 const DEFAULT_MONITOR_USER = 'yuhan';
-const REMOTE_MONITOR_ORIGIN = 'http://121.43.111.176:18080';
+const DEFAULT_MONITOR_DATA_ORIGIN = 'http://121.43.111.176:18080';
 
 const textEncoder = new TextEncoder();
 
@@ -8,6 +8,8 @@ const protectedPathPrefixes = [
   '/quant-monitor',
   '/monitor-data',
 ];
+
+const getMonitorDataOrigin = () => process.env.MONITOR_DATA_ORIGIN || DEFAULT_MONITOR_DATA_ORIGIN;
 
 const isProtectedRequest = (url: URL) => {
   if (url.hostname.startsWith('quant.')) return true;
@@ -63,9 +65,10 @@ const notConfigured = () => new Response('Monitor authentication is not configur
 });
 
 const proxyMonitorData = (request: Request, url: URL) => {
-  const target = new URL(url.pathname + url.search, REMOTE_MONITOR_ORIGIN);
+  const monitorDataOrigin = getMonitorDataOrigin();
+  const target = new URL(url.pathname + url.search, monitorDataOrigin);
   const headers = new Headers(request.headers);
-  headers.set('Host', new URL(REMOTE_MONITOR_ORIGIN).host);
+  headers.set('Host', new URL(monitorDataOrigin).host);
 
   return fetch(target, {
     method: request.method,
