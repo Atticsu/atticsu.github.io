@@ -7,9 +7,23 @@ import ResumeSection from './sections/ResumeSection';
 import PortfolioSection from './sections/PortfolioSection';
 import LiveAlphaSection from './sections/LiveAlphaSection';
 import ContactFooter from './sections/ContactFooter';
+import StrategyMonitorApp from './monitor/StrategyMonitorApp';
+
+const isMonitorSurface = () => {
+  if (typeof window === 'undefined') return false;
+  return (
+    window.location.hostname.startsWith('quant.')
+    || window.location.pathname.startsWith('/strategy-monitor')
+    || window.location.pathname.startsWith('/quant-monitor')
+  );
+};
 
 const App = () => {
   const [language, setLanguage] = useState('en');
+
+  if (isMonitorSurface()) {
+    return <StrategyMonitorApp language={language} setLanguage={setLanguage} />;
+  }
 
   return (
     <div className="relative min-h-screen bg-ink-950 text-bone-100 font-sans overflow-x-hidden">
