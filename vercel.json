@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/strategy-monitor/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/quant-monitor/:path*",
+      "destination": "/index.html"
+    }
+  ]
+}
