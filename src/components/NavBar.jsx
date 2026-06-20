@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowUpRight, Menu, X } from 'lucide-react';
+import { ArrowUpRight, Menu, ShieldCheck, X } from 'lucide-react';
 import { uiText } from '../i18n';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useActiveSection } from '../lib/useInView';
@@ -13,10 +13,12 @@ const NAV_LINKS = [
 ];
 
 const NAV_IDS = NAV_LINKS.map((n) => n.id);
+const MONITOR_URL = 'https://quant.yuhanwu.cn/';
 
 const NavBar = ({ language, setLanguage }) => {
   const copy = uiText[language] || uiText.en;
   const brandName = copy.brandName || uiText.en.brandName;
+  const monitorLabel = copy.monitor || (language === 'zh' ? '策略监控' : 'Monitor');
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const active = useActiveSection(NAV_IDS);
@@ -94,6 +96,13 @@ const NavBar = ({ language, setLanguage }) => {
         <div className="flex items-center gap-3">
           <LanguageSwitcher language={language} setLanguage={setLanguage} />
           <a
+            href={MONITOR_URL}
+            className="hidden items-center gap-1.5 rounded-full border border-lamp-500/30 bg-lamp-500/[0.06] px-4 py-1.5 text-xs font-mono uppercase tracking-[0.22em] text-lamp-300 transition-all hover:border-lamp-500/70 hover:bg-lamp-500/[0.1] md:flex"
+          >
+            {monitorLabel}
+            <ShieldCheck size={13} />
+          </a>
+          <a
             href="mailto:contact.yuhan@gmail.com"
             className="hidden items-center gap-1.5 rounded-full border border-bone-100/15 bg-bone-50/[0.04] px-4 py-1.5 text-xs font-mono uppercase tracking-[0.22em] text-bone-100 transition-all hover:border-lamp-500/70 hover:bg-lamp-500/[0.08] hover:text-lamp-300 md:flex"
           >
@@ -125,6 +134,15 @@ const NavBar = ({ language, setLanguage }) => {
                 </a>
               </li>
             ))}
+            <li>
+              <a
+                href={MONITOR_URL}
+                className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-[0.22em] text-lamp-300"
+              >
+                {monitorLabel}
+                <ShieldCheck size={13} />
+              </a>
+            </li>
             <li>
               <a
                 href="mailto:contact.yuhan@gmail.com"
