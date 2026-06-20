@@ -17,6 +17,7 @@ import {
   ArrowUpRight,
   CalendarClock,
   Gauge,
+  ListChecks,
   RefreshCcw,
   ShieldCheck,
   TrendingUp,
@@ -58,7 +59,10 @@ const copyByLanguage = {
       curve: 'Equity curve',
       positions: 'Positions',
       targets: 'Next targets',
+      pendingOrders: 'Pending orders',
+      orders: 'Recent orders',
       trades: 'Recent trades',
+      broker: 'Paper broker',
     },
     range: {
       title: 'Selected range',
@@ -98,6 +102,20 @@ const copyByLanguage = {
       price: 'Price',
       notional: 'Notional',
       fee: 'Fee',
+      signal: 'Signal',
+      exec: 'Exec',
+      desired: 'Desired',
+      ordered: 'Ordered',
+      reason: 'Reason',
+      mode: 'Mode',
+      sourceEnd: 'Source end',
+      latestTarget: 'Latest target',
+      latestPrice: 'Latest price',
+      targetFreshness: 'Target freshness',
+      stale: 'Stale target stream',
+      current: 'Current',
+      pending: 'Pending',
+      orders: 'Orders',
       empty: 'No rows',
       loading: 'Loading monitor feed',
       error: 'Unable to load monitor feed',
@@ -123,7 +141,10 @@ const copyByLanguage = {
       curve: '权益曲线',
       positions: '当前持仓',
       targets: '目标仓位',
+      pendingOrders: '待执行订单',
+      orders: '最近订单',
       trades: '近期交易',
+      broker: '模拟撮合',
     },
     range: {
       title: '所选区间',
@@ -163,6 +184,20 @@ const copyByLanguage = {
       price: '价格',
       notional: '成交额',
       fee: '费用',
+      signal: '信号日',
+      exec: '执行日',
+      desired: '目标股数',
+      ordered: '订单股数',
+      reason: '原因',
+      mode: '模式',
+      sourceEnd: '源 run 截止',
+      latestTarget: '最新目标',
+      latestPrice: '最新行情',
+      targetFreshness: '目标新鲜度',
+      stale: '目标流已落后',
+      current: '当前',
+      pending: '待执行',
+      orders: '订单数',
       empty: '暂无记录',
       loading: '正在加载监控数据',
       error: '无法加载监控数据',
@@ -260,15 +295,17 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
     setError(false);
     (async () => {
       try {
-        const [snapshot, equity, positions, targets, trades] = await Promise.all([
+        const [snapshot, equity, positions, targets, trades, orders, pendingOrders] = await Promise.all([
           fetchJson(`${DATA_BASE}/${selectedEntry.snapshotUrl}`),
           fetchJson(`${DATA_BASE}/${selectedEntry.equityUrl}`),
           fetchJson(`${DATA_BASE}/${selectedEntry.positionsUrl}`),
           fetchJson(`${DATA_BASE}/${selectedEntry.targetsUrl}`),
           fetchJson(`${DATA_BASE}/${selectedEntry.tradesUrl}`),
+          selectedEntry.ordersUrl ? fetchJson(`${DATA_BASE}/${selectedEntry.ordersUrl}`) : Promise.resolve([]),
+          selectedEntry.pendingOrdersUrl ? fetchJson(`${DATA_BASE}/${selectedEntry.pendingOrdersUrl}`) : Promise.resolve([]),
         ]);
         if (!alive) return;
-        setBundle({ snapshot, equity, positions, targets, trades });
+        setBundle({ snapshot, equity, positions, targets, trades, orders, pendingOrders });
         setLoading(false);
       } catch {
         if (alive) {
@@ -281,11 +318,14 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
   }, [selectedEntry]);
 
   const snapshot = bundle?.snapshot;
+  const paper = snapshot?.paper || {};
   const currency = snapshot?.currency || 'CNY';
   const equityRows = bundle?.equity || [];
   const firstEquityDate = equityRows[0]?.date || '';
   const lastEquityDate = equityRows[equityRows.length - 1]?.date || '';
   const positiveTargets = (bundle?.targets || []).filter((row) => Number(row.targetWeight) > 0);
+  const pendingOrders = bundle?.pendingOrders || [];
+  const orders = bundle?.orders || [];
   const latestDate = latestValue(snapshot, 'date') || selectedEntry?.latestDate || '—';
 
   useEffect(() => {
@@ -541,6 +581,21 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                     <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.22em] text-bone-500">{copy.labels.rule}</p>
                     <p className="mt-2 text-sm leading-relaxed text-bone-400">{snapshot.executionRule}</p>
                   </div>
+                  <div className="rounded-xl border border-ink-700/70 bg-ink-900/45 p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-lamp-500">{copy.tabs.broker}</p>
+                      <ListChecks size={15} className="text-bone-500" />
+                    </div>
+                    <dl className="mt-5 grid gap-3 text-sm">
+                      <div className="flex justify-between gap-4"><dt className="text-bone-500">{copy.labels.mode}</dt><dd className="font-mono text-bone-200">{paper.mode || '—'}</dd></div>
+                      <div className="flex justify-between gap-4"><dt className="text-bone-500">{copy.labels.sourceEnd}</dt><dd className="font-mono text-bone-200">{paper.sourceEndDate || '—'}</dd></div>
+                      <div className="flex justify-between gap-4"><dt className="text-bone-500">{copy.labels.latestTarget}</dt><dd className="font-mono text-bone-200">{paper.latestTargetDate || '—'}</dd></div>
+                      <div className="flex justify-between gap-4"><dt className="text-bone-500">{copy.labels.latestPrice}</dt><dd className="font-mono text-bone-200">{paper.latestPriceDate || '—'}</dd></div>
+                      <div className="flex justify-between gap-4"><dt className="text-bone-500">{copy.labels.targetFreshness}</dt><dd className={`font-mono ${paper.targetStreamStale ? 'text-lamp-300' : 'text-bone-200'}`}>{paper.targetStreamStale ? copy.labels.stale : copy.labels.current}</dd></div>
+                      <div className="flex justify-between gap-4"><dt className="text-bone-500">{copy.labels.pending}</dt><dd className="font-mono text-bone-200">{pendingOrders.length}</dd></div>
+                      <div className="flex justify-between gap-4"><dt className="text-bone-500">{copy.labels.orders}</dt><dd className="font-mono text-bone-200">{paper.orders ?? orders.length}</dd></div>
+                    </dl>
+                  </div>
                 </aside>
               </section>
             </Reveal>
@@ -600,6 +655,32 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                     </table>
                   </div>
                 </div>
+              </section>
+            </Reveal>
+
+            <Reveal delay={190}>
+              <section className="mt-6 grid gap-6 lg:grid-cols-2">
+                <DataTable title={copy.tabs.pendingOrders} rows={pendingOrders} empty={copy.labels.empty} columns={[
+                  [copy.labels.signal, (row) => row.signalDate || '—'],
+                  [copy.labels.exec, (row) => row.execDate || '—'],
+                  [copy.labels.code, (row) => row.tsCode, 'text-lamp-300'],
+                  [copy.labels.name, (row) => row.name || '—'],
+                  [copy.labels.side, (row) => row.side],
+                  [copy.labels.target, (row) => formatPct(row.targetWeight)],
+                  [copy.labels.status, (row) => row.status],
+                ]} />
+                <DataTable title={copy.tabs.orders} rows={orders.slice().reverse().slice(0, 12)} empty={copy.labels.empty} columns={[
+                  [copy.labels.signal, (row) => row.signalDate || '—'],
+                  [copy.labels.exec, (row) => row.execDate || '—'],
+                  [copy.labels.code, (row) => row.tsCode, 'text-lamp-300'],
+                  [copy.labels.name, (row) => row.name || '—'],
+                  [copy.labels.side, (row) => row.side],
+                  [copy.labels.desired, (row) => row.desiredShares],
+                  [copy.labels.ordered, (row) => row.orderShares],
+                  [copy.labels.notional, (row) => formatCurrency(row.estimatedNotional, currency)],
+                  [copy.labels.status, (row) => row.status],
+                  [copy.labels.reason, (row) => row.reason],
+                ]} />
               </section>
             </Reveal>
 
