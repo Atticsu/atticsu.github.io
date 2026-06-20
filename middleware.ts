@@ -1,5 +1,4 @@
 const DEFAULT_MONITOR_USER = 'yuhan';
-const DEFAULT_MONITOR_DATA_ORIGIN = 'http://quant-origin.yuhanwu.cn:18080';
 
 const textEncoder = new TextEncoder();
 
@@ -7,9 +6,8 @@ const protectedPathPrefixes = [
   '/strategy-monitor',
   '/quant-monitor',
   '/monitor-data',
+  '/api/monitor-data',
 ];
-
-const getMonitorDataOrigin = () => process.env.MONITOR_DATA_ORIGIN || DEFAULT_MONITOR_DATA_ORIGIN;
 
 const isProtectedRequest = (url: URL) => {
   if (url.hostname.startsWith('quant.')) return true;
@@ -64,20 +62,6 @@ const notConfigured = () => new Response('Monitor authentication is not configur
   },
 });
 
-const proxyMonitorData = (request: Request, url: URL) => {
-  const monitorDataOrigin = getMonitorDataOrigin();
-  const target = new URL(url.pathname + url.search, monitorDataOrigin);
-  const headers = new Headers(request.headers);
-  headers.set('Host', new URL(monitorDataOrigin).host);
-
-  return fetch(target, {
-    method: request.method,
-    headers,
-    body: request.method === 'GET' || request.method === 'HEAD' ? undefined : request.body,
-    redirect: 'manual',
-  });
-};
-
 export const config = {
   matcher: ['/((?!assets|favicon.ico|robots.txt|sitemap.xml).*)'],
 };
@@ -98,10 +82,6 @@ export default function middleware(request: Request) {
     && timingSafeEqual(credentials.password, expectedPassword);
 
   if (!isAllowed) return unauthorized();
-
-  if (url.pathname === '/monitor-data' || url.pathname.startsWith('/monitor-data/')) {
-    return proxyMonitorData(request, url);
-  }
 
   return undefined;
 }
