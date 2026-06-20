@@ -1,5 +1,5 @@
 const DEFAULT_MONITOR_USER = 'yuhan';
-const DEFAULT_MONITOR_DATA_ORIGIN = 'http://121.43.111.176:18080';
+const DEFAULT_MONITOR_DATA_ORIGIN = 'http://quant-origin.yuhanwu.cn:18080';
 
 const textEncoder = new TextEncoder();
 
