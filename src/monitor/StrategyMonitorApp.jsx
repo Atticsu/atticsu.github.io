@@ -269,6 +269,8 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
   const [bundle, setBundle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [manualSheet, setManualSheet] = useState(null);
+  const [manualError, setManualError] = useState(false);
   const [reloadTick, setReloadTick] = useState(0);
   const [equityStartDate, setEquityStartDate] = useState('');
   const [equityEndDate, setEquityEndDate] = useState('');
@@ -288,6 +290,20 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
           setError(true);
           setLoading(false);
         }
+      }
+    })();
+    return () => { alive = false; };
+  }, [reloadTick]);
+
+  useEffect(() => {
+    let alive = true;
+    setManualError(false);
+    (async () => {
+      try {
+        const loaded = await fetchJson(`${DATA_BASE}/manual-trading/hs_macro_semichip_m0.json`);
+        if (alive) setManualSheet(loaded);
+      } catch {
+        if (alive) setManualError(true);
       }
     })();
     return () => { alive = false; };
@@ -336,6 +352,7 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
   const positiveTargets = (bundle?.targets || []).filter((row) => Number(row.targetWeight) > 0);
   const pendingOrders = bundle?.pendingOrders || [];
   const orders = bundle?.orders || [];
+  const manualRows = manualSheet?.holdings || [];
   const latestDate = latestValue(snapshot, 'date') || selectedEntry?.latestDate || '—';
 
   useEffect(() => {
@@ -417,6 +434,16 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
       </header>
 
       <main className="mx-auto max-w-7xl px-5 pb-24 pt-28 md:px-10 md:pt-36">
+        <aside className="fixed left-4 top-28 z-40 hidden w-40 rounded-xl border border-ink-700/70 bg-ink-950/80 p-3 backdrop-blur-xl 2xl:block">
+          <nav className="grid gap-2 font-mono text-[10px] uppercase tracking-[0.18em]">
+            <a href="#manual-orders" className="rounded-lg border border-lamp-500/40 bg-lamp-500/[0.08] px-3 py-2 text-lamp-300 hover:border-lamp-500/80">
+              Manual HS
+            </a>
+            <a href="#strategy-monitor" className="rounded-lg border border-ink-700/70 px-3 py-2 text-bone-400 hover:border-bone-600 hover:text-bone-200">
+              Monitor
+            </a>
+          </nav>
+        </aside>
         <Reveal>
           <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
             <div>
@@ -479,8 +506,63 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
               </section>
             </Reveal>
 
+            <Reveal delay={110}>
+              <section id="manual-orders" className="mt-6 scroll-mt-28 rounded-xl border border-lamp-500/30 bg-lamp-500/[0.045] p-5 md:p-7">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-lamp-500">Manual Tonghuashun Sheet</p>
+                    <h2 className="mt-2 font-display text-3xl text-bone-50">meta_gcap_macro_semichip_weak_or_tight_m0</h2>
+                    <p className="mt-3 max-w-3xl text-sm leading-relaxed text-bone-300">
+                      {manualSheet?.signal?.headline || (manualError ? 'Manual sheet is unavailable.' : 'Loading manual sheet.')}
+                    </p>
+                  </div>
+                  <div className="grid min-w-[260px] gap-2 rounded-lg border border-ink-700/70 bg-ink-950/40 p-3 font-mono text-xs">
+                    <div className="flex justify-between gap-4"><span className="text-bone-500">Capital</span><span className="text-bone-100">{formatCurrency(manualSheet?.account?.capital, manualSheet?.account?.currency || currency)}</span></div>
+                    <div className="flex justify-between gap-4"><span className="text-bone-500">Signal</span><span className="text-bone-100">{manualSheet?.signal?.nativeSignalDate || '—'}</span></div>
+                    <div className="flex justify-between gap-4"><span className="text-bone-500">Planned open</span><span className="text-lamp-300">{manualSheet?.signal?.plannedOpenDate || '—'}</span></div>
+                    <div className="flex justify-between gap-4"><span className="text-bone-500">Executable</span><span className={manualSheet?.signal?.hasExecutableOrder ? 'text-lamp-300' : 'text-bone-300'}>{manualSheet?.signal?.hasExecutableOrder ? 'YES' : 'NO'}</span></div>
+                  </div>
+                </div>
+                <div className="mt-5 overflow-x-auto rounded-lg border border-ink-700/70 bg-ink-950/35">
+                  <table className="w-full min-w-[980px] text-left text-sm">
+                    <thead className="font-mono text-[10px] uppercase tracking-[0.20em] text-bone-500">
+                      <tr className="border-b border-ink-700/60">
+                        <th className="px-4 py-3 font-normal">Code</th>
+                        <th className="px-4 py-3 font-normal">Name</th>
+                        <th className="px-4 py-3 font-normal">Target</th>
+                        <th className="px-4 py-3 font-normal">Target Value</th>
+                        <th className="px-4 py-3 font-normal">Last Close</th>
+                        <th className="px-4 py-3 font-normal">Current</th>
+                        <th className="px-4 py-3 font-normal">Hold Shares</th>
+                        <th className="px-4 py-3 font-normal">Order</th>
+                        <th className="px-4 py-3 font-normal">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-ink-700/45">
+                      {manualRows.length ? manualRows.map((row) => (
+                        <tr key={row.tsCode} className="hover:bg-ink-800/35">
+                          <td className="px-4 py-3 font-mono text-lamp-300">{row.tsCode}</td>
+                          <td className="px-4 py-3 text-bone-200">{row.name || '—'}</td>
+                          <td className="px-4 py-3 font-mono text-bone-300">{formatPct(row.targetWeight)}</td>
+                          <td className="px-4 py-3 font-mono text-bone-300">{formatCurrency(row.targetValue, manualSheet?.account?.currency || currency)}</td>
+                          <td className="px-4 py-3 font-mono text-bone-300">{formatNumber(row.lastClose, 3)}</td>
+                          <td className="px-4 py-3 font-mono text-bone-300">{row.currentShares}</td>
+                          <td className="px-4 py-3 font-mono text-bone-50">{row.desiredShares}</td>
+                          <td className="px-4 py-3 font-mono text-bone-50">{row.orderShares}</td>
+                          <td className="px-4 py-3 font-mono text-[11px] uppercase tracking-[0.14em] text-bone-400">{row.tradeAction}</td>
+                        </tr>
+                      )) : <tr><td colSpan={9} className="px-4 py-4 text-bone-500">{copy.labels.empty}</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="mt-4 text-xs leading-relaxed text-bone-500">
+                  First manual run assumes zero current shares. Refresh before 08:00 each trading day, then place only listed board-lot orders in Tonghuashun simulation.
+                </p>
+              </section>
+            </Reveal>
+
             <Reveal delay={120}>
-              <section className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_0.85fr]">
+              <section id="strategy-monitor" className="mt-6 grid scroll-mt-28 gap-6 lg:grid-cols-[1.5fr_0.85fr]">
                 <div className="rounded-xl border border-ink-700/70 bg-ink-900/45 p-5 md:p-7">
                   <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                     <div>
