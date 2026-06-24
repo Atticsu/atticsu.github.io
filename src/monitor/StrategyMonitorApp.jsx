@@ -240,7 +240,11 @@ const formatShares = (value, digits = 1) => {
 };
 
 const manualActionLabel = (row) => {
-  if (row?.tradeAction === 'stale_signal_no_order' || row?.blockedReason === 'native_signal_stale') return 'STALE';
+  if (
+    row?.tradeAction === 'stale_signal_no_order'
+    || row?.blockedReason === 'native_signal_stale'
+    || row?.blockedReason === 'native_lineage_stale'
+  ) return 'STALE';
   if (Number(row?.orderShares || 0) > 0) return 'BUY';
   if (Number(row?.targetWeight || 0) > 0) return 'NO ORDER';
   return 'NO TARGET';
@@ -248,6 +252,7 @@ const manualActionLabel = (row) => {
 
 const manualBlockedReason = (reason) => ({
   native_signal_stale: 'native signal stale; regenerate strategy first',
+  native_lineage_stale: 'upstream lineage stale; regenerate full chain first',
   target_value_below_one_lot: 'target value below one board lot',
   target_value_below_min_trade: 'target value below minimum trade',
   missing_latest_price: 'missing latest price',
@@ -380,6 +385,9 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
   const manualPlanOnlyCount = manualSheet?.summary?.planOnlyCount ?? manualPlanRows.filter((row) => Number(row.targetWeight || 0) > 0 && Number(row.orderShares || 0) === 0).length;
   const manualNativeStale = Boolean(manualSheet?.signal?.nativeSignalStale);
   const manualNativeStaleDays = manualSheet?.signal?.nativeSignalStaleDays ?? 0;
+  const manualLineageStale = Boolean(manualSheet && manualSheet?.signal?.nativeLineageFresh === false);
+  const manualLineageStaleNodes = manualSheet?.signal?.nativeLineageStaleNodeCount ?? 0;
+  const manualLineageNodes = manualSheet?.signal?.nativeLineageNodeCount ?? 0;
   const latestDate = latestValue(snapshot, 'date') || selectedEntry?.latestDate || '—';
 
   useEffect(() => {
@@ -547,9 +555,9 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                         Planned rows: {manualPlanCount} / Plan-only rows: {manualPlanOnlyCount} / Executable orders: {manualSheet?.summary?.executableOrderCount ?? 0}
                       </p>
                     )}
-                    {manualNativeStale && (
+                    {(manualNativeStale || manualLineageStale) && (
                       <p className="mt-3 max-w-3xl rounded-lg border border-red-400/30 bg-red-500/[0.06] px-3 py-2 text-xs leading-relaxed text-red-200">
-                        Native signal is {manualNativeStaleDays} calendar days behind the latest price date. Treat this sheet as observation only until the frozen strategy chain is regenerated after end-of-day data.
+                        Native freshness gate failed: signal lag {manualNativeStaleDays} calendar days, lineage stale nodes {manualLineageStaleNodes}/{manualLineageNodes}. Treat this sheet as observation only until the frozen strategy chain is regenerated after end-of-day data.
                       </p>
                     )}
                   </div>
@@ -558,6 +566,7 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Target gross</span><span className="text-bone-100">{formatPct(manualSheet?.summary?.targetGrossWeight)}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Target value</span><span className="text-bone-100">{formatCurrency(manualSheet?.summary?.targetValue, manualCurrency)}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Native stale</span><span className={manualNativeStale ? 'text-red-200' : 'text-bone-300'}>{manualNativeStale ? `YES / ${manualNativeStaleDays}d` : 'NO'}</span></div>
+                    <div className="flex justify-between gap-4"><span className="text-bone-500">Native lineage</span><span className={manualLineageStale ? 'text-red-200' : 'text-bone-300'}>{manualLineageStale ? `${manualLineageStaleNodes}/${manualLineageNodes} stale` : 'Fresh'}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Signal</span><span className="text-bone-100">{manualSheet?.signal?.nativeSignalDate || '—'}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Planned open</span><span className="text-lamp-300">{manualSheet?.signal?.plannedOpenDate || '—'}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Executable</span><span className={manualSheet?.signal?.hasExecutableOrder ? 'text-lamp-300' : 'text-bone-300'}>{manualSheet?.signal?.hasExecutableOrder ? 'YES' : 'NO'}</span></div>
@@ -600,7 +609,7 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                   </table>
                 </div>
                 <p className="mt-4 text-xs leading-relaxed text-bone-500">
-                  First manual run assumes zero current shares. Place only listed board-lot orders when the native signal is fresh; stale native signals are observation-only.
+                  First manual run assumes zero current shares. Place only listed board-lot orders when the native signal and its full upstream lineage are fresh; stale rows are observation-only.
                 </p>
               </section>
             </Reveal>
