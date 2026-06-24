@@ -234,6 +234,23 @@ const formatPct = (value, digits = 2) => {
   return `${(Number(value) * 100).toFixed(digits)}%`;
 };
 
+const formatShares = (value, digits = 1) => {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return '-';
+  return Number(value).toFixed(digits);
+};
+
+const manualActionLabel = (row) => {
+  if (Number(row?.orderShares || 0) > 0) return 'BUY';
+  if (Number(row?.targetWeight || 0) > 0) return 'PLAN ONLY';
+  return 'NO TARGET';
+};
+
+const manualBlockedReason = (reason) => ({
+  target_value_below_one_lot: 'target value below one board lot',
+  target_value_below_min_trade: 'target value below minimum trade',
+  missing_latest_price: 'missing latest price',
+}[reason] || reason || 'not blocked');
+
 const toIsoDate = (date) => date.toISOString().slice(0, 10);
 
 const fetchJson = async (url) => {
@@ -353,6 +370,12 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
   const pendingOrders = bundle?.pendingOrders || [];
   const orders = bundle?.orders || [];
   const manualRows = manualSheet?.holdings || [];
+  const manualCurrency = manualSheet?.account?.currency || currency;
+  const manualPlanRows = manualRows.filter((row) => (
+    row.isPlannedHolding || Number(row.targetWeight || 0) > 0 || Number(row.orderShares || 0) !== 0
+  ));
+  const manualPlanCount = manualSheet?.summary?.plannedHoldingCount ?? manualPlanRows.filter((row) => Number(row.targetWeight || 0) > 0).length;
+  const manualPlanOnlyCount = manualSheet?.summary?.planOnlyCount ?? manualPlanRows.filter((row) => Number(row.targetWeight || 0) > 0 && Number(row.orderShares || 0) === 0).length;
   const latestDate = latestValue(snapshot, 'date') || selectedEntry?.latestDate || '—';
 
   useEffect(() => {
@@ -510,48 +533,57 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
               <section id="manual-orders" className="mt-6 scroll-mt-28 rounded-xl border border-lamp-500/30 bg-lamp-500/[0.045] p-5 md:p-7">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-lamp-500">Manual Tonghuashun Sheet</p>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-lamp-500">Manual Tonghuashun Plan</p>
                     <h2 className="mt-2 font-display text-3xl text-bone-50">meta_gcap_macro_semichip_weak_or_tight_m0</h2>
                     <p className="mt-3 max-w-3xl text-sm leading-relaxed text-bone-300">
-                      {manualSheet?.signal?.headline || (manualError ? 'Manual sheet is unavailable.' : 'Loading manual sheet.')}
+                      {manualSheet?.signal?.headline || (manualError ? 'Manual plan is unavailable.' : 'Loading manual plan.')}
                     </p>
+                    {manualSheet && (
+                      <p className="mt-2 max-w-3xl font-mono text-[11px] uppercase tracking-[0.14em] text-bone-400">
+                        Planned rows: {manualPlanCount} / Plan-only rows: {manualPlanOnlyCount} / Executable orders: {manualSheet?.summary?.executableOrderCount ?? 0}
+                      </p>
+                    )}
                   </div>
                   <div className="grid min-w-[260px] gap-2 rounded-lg border border-ink-700/70 bg-ink-950/40 p-3 font-mono text-xs">
-                    <div className="flex justify-between gap-4"><span className="text-bone-500">Capital</span><span className="text-bone-100">{formatCurrency(manualSheet?.account?.capital, manualSheet?.account?.currency || currency)}</span></div>
+                    <div className="flex justify-between gap-4"><span className="text-bone-500">Capital</span><span className="text-bone-100">{formatCurrency(manualSheet?.account?.capital, manualCurrency)}</span></div>
+                    <div className="flex justify-between gap-4"><span className="text-bone-500">Target gross</span><span className="text-bone-100">{formatPct(manualSheet?.summary?.targetGrossWeight)}</span></div>
+                    <div className="flex justify-between gap-4"><span className="text-bone-500">Target value</span><span className="text-bone-100">{formatCurrency(manualSheet?.summary?.targetValue, manualCurrency)}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Signal</span><span className="text-bone-100">{manualSheet?.signal?.nativeSignalDate || '—'}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Planned open</span><span className="text-lamp-300">{manualSheet?.signal?.plannedOpenDate || '—'}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Executable</span><span className={manualSheet?.signal?.hasExecutableOrder ? 'text-lamp-300' : 'text-bone-300'}>{manualSheet?.signal?.hasExecutableOrder ? 'YES' : 'NO'}</span></div>
                   </div>
                 </div>
                 <div className="mt-5 overflow-x-auto rounded-lg border border-ink-700/70 bg-ink-950/35">
-                  <table className="w-full min-w-[980px] text-left text-sm">
+                  <table className="w-full min-w-[1160px] text-left text-sm">
                     <thead className="font-mono text-[10px] uppercase tracking-[0.20em] text-bone-500">
                       <tr className="border-b border-ink-700/60">
                         <th className="px-4 py-3 font-normal">Code</th>
                         <th className="px-4 py-3 font-normal">Name</th>
-                        <th className="px-4 py-3 font-normal">Target</th>
+                        <th className="px-4 py-3 font-normal">Plan Target</th>
                         <th className="px-4 py-3 font-normal">Target Value</th>
                         <th className="px-4 py-3 font-normal">Last Close</th>
-                        <th className="px-4 py-3 font-normal">Current</th>
-                        <th className="px-4 py-3 font-normal">Hold Shares</th>
+                        <th className="px-4 py-3 font-normal">Theoretical</th>
+                        <th className="px-4 py-3 font-normal">Board Lot</th>
                         <th className="px-4 py-3 font-normal">Order</th>
                         <th className="px-4 py-3 font-normal">Action</th>
+                        <th className="px-4 py-3 font-normal">Reason</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-ink-700/45">
-                      {manualRows.length ? manualRows.map((row) => (
-                        <tr key={row.tsCode} className="hover:bg-ink-800/35">
+                      {manualPlanRows.length ? manualPlanRows.map((row) => (
+                        <tr key={row.tsCode} className={Number(row.orderShares || 0) > 0 ? 'hover:bg-ink-800/35' : 'bg-ink-950/20 hover:bg-ink-800/35'}>
                           <td className="px-4 py-3 font-mono text-lamp-300">{row.tsCode}</td>
                           <td className="px-4 py-3 text-bone-200">{row.name || '—'}</td>
                           <td className="px-4 py-3 font-mono text-bone-300">{formatPct(row.targetWeight)}</td>
-                          <td className="px-4 py-3 font-mono text-bone-300">{formatCurrency(row.targetValue, manualSheet?.account?.currency || currency)}</td>
+                          <td className="px-4 py-3 font-mono text-bone-300">{formatCurrency(row.targetValue, manualCurrency)}</td>
                           <td className="px-4 py-3 font-mono text-bone-300">{formatNumber(row.lastClose, 3)}</td>
-                          <td className="px-4 py-3 font-mono text-bone-300">{row.currentShares}</td>
+                          <td className="px-4 py-3 font-mono text-bone-300">{formatShares(row.theoreticalShares)}</td>
                           <td className="px-4 py-3 font-mono text-bone-50">{row.desiredShares}</td>
                           <td className="px-4 py-3 font-mono text-bone-50">{row.orderShares}</td>
-                          <td className="px-4 py-3 font-mono text-[11px] uppercase tracking-[0.14em] text-bone-400">{row.tradeAction}</td>
+                          <td className={`px-4 py-3 font-mono text-[11px] uppercase tracking-[0.14em] ${Number(row.orderShares || 0) > 0 ? 'text-lamp-300' : 'text-bone-400'}`}>{manualActionLabel(row)}</td>
+                          <td className="px-4 py-3 text-xs text-bone-500">{manualBlockedReason(row.blockedReason)}</td>
                         </tr>
-                      )) : <tr><td colSpan={9} className="px-4 py-4 text-bone-500">{copy.labels.empty}</td></tr>}
+                      )) : <tr><td colSpan={10} className="px-4 py-4 text-bone-500">{copy.labels.empty}</td></tr>}
                     </tbody>
                   </table>
                 </div>
