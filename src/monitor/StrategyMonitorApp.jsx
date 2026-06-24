@@ -240,12 +240,14 @@ const formatShares = (value, digits = 1) => {
 };
 
 const manualActionLabel = (row) => {
+  if (row?.tradeAction === 'stale_signal_no_order' || row?.blockedReason === 'native_signal_stale') return 'STALE';
   if (Number(row?.orderShares || 0) > 0) return 'BUY';
   if (Number(row?.targetWeight || 0) > 0) return 'NO ORDER';
   return 'NO TARGET';
 };
 
 const manualBlockedReason = (reason) => ({
+  native_signal_stale: 'native signal stale; regenerate strategy first',
   target_value_below_one_lot: 'target value below one board lot',
   target_value_below_min_trade: 'target value below minimum trade',
   missing_latest_price: 'missing latest price',
@@ -376,6 +378,8 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
   ));
   const manualPlanCount = manualSheet?.summary?.plannedHoldingCount ?? manualPlanRows.filter((row) => Number(row.targetWeight || 0) > 0).length;
   const manualPlanOnlyCount = manualSheet?.summary?.planOnlyCount ?? manualPlanRows.filter((row) => Number(row.targetWeight || 0) > 0 && Number(row.orderShares || 0) === 0).length;
+  const manualNativeStale = Boolean(manualSheet?.signal?.nativeSignalStale);
+  const manualNativeStaleDays = manualSheet?.signal?.nativeSignalStaleDays ?? 0;
   const latestDate = latestValue(snapshot, 'date') || selectedEntry?.latestDate || '—';
 
   useEffect(() => {
@@ -543,11 +547,17 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                         Planned rows: {manualPlanCount} / Plan-only rows: {manualPlanOnlyCount} / Executable orders: {manualSheet?.summary?.executableOrderCount ?? 0}
                       </p>
                     )}
+                    {manualNativeStale && (
+                      <p className="mt-3 max-w-3xl rounded-lg border border-red-400/30 bg-red-500/[0.06] px-3 py-2 text-xs leading-relaxed text-red-200">
+                        Native signal is {manualNativeStaleDays} calendar days behind the latest price date. Treat this sheet as observation only until the frozen strategy chain is regenerated after end-of-day data.
+                      </p>
+                    )}
                   </div>
                   <div className="grid min-w-[260px] gap-2 rounded-lg border border-ink-700/70 bg-ink-950/40 p-3 font-mono text-xs">
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Capital</span><span className="text-bone-100">{formatCurrency(manualSheet?.account?.capital, manualCurrency)}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Target gross</span><span className="text-bone-100">{formatPct(manualSheet?.summary?.targetGrossWeight)}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Target value</span><span className="text-bone-100">{formatCurrency(manualSheet?.summary?.targetValue, manualCurrency)}</span></div>
+                    <div className="flex justify-between gap-4"><span className="text-bone-500">Native stale</span><span className={manualNativeStale ? 'text-red-200' : 'text-bone-300'}>{manualNativeStale ? `YES / ${manualNativeStaleDays}d` : 'NO'}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Signal</span><span className="text-bone-100">{manualSheet?.signal?.nativeSignalDate || '—'}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Planned open</span><span className="text-lamp-300">{manualSheet?.signal?.plannedOpenDate || '—'}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Executable</span><span className={manualSheet?.signal?.hasExecutableOrder ? 'text-lamp-300' : 'text-bone-300'}>{manualSheet?.signal?.hasExecutableOrder ? 'YES' : 'NO'}</span></div>
@@ -590,7 +600,7 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                   </table>
                 </div>
                 <p className="mt-4 text-xs leading-relaxed text-bone-500">
-                  First manual run assumes zero current shares. Refresh before 08:00 each trading day, then place only listed board-lot orders in Tonghuashun simulation.
+                  First manual run assumes zero current shares. Place only listed board-lot orders when the native signal is fresh; stale native signals are observation-only.
                 </p>
               </section>
             </Reveal>
