@@ -241,7 +241,7 @@ const formatShares = (value, digits = 1) => {
 
 const manualActionLabel = (row) => {
   if (Number(row?.orderShares || 0) > 0) return 'BUY';
-  if (Number(row?.targetWeight || 0) > 0) return 'PLAN ONLY';
+  if (Number(row?.targetWeight || 0) > 0) return 'NO ORDER';
   return 'NO TARGET';
 };
 
@@ -554,13 +554,14 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                   </div>
                 </div>
                 <div className="mt-5 overflow-x-auto rounded-lg border border-ink-700/70 bg-ink-950/35">
-                  <table className="w-full min-w-[1160px] text-left text-sm">
+                  <table className="w-full min-w-[1260px] text-left text-sm">
                     <thead className="font-mono text-[10px] uppercase tracking-[0.20em] text-bone-500">
                       <tr className="border-b border-ink-700/60">
                         <th className="px-4 py-3 font-normal">Code</th>
                         <th className="px-4 py-3 font-normal">Name</th>
                         <th className="px-4 py-3 font-normal">Plan Target</th>
                         <th className="px-4 py-3 font-normal">Target Value</th>
+                        <th className="px-4 py-3 font-normal">One Lot Value</th>
                         <th className="px-4 py-3 font-normal">Last Close</th>
                         <th className="px-4 py-3 font-normal">Theoretical</th>
                         <th className="px-4 py-3 font-normal">Board Lot</th>
@@ -576,6 +577,7 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                           <td className="px-4 py-3 text-bone-200">{row.name || '—'}</td>
                           <td className="px-4 py-3 font-mono text-bone-300">{formatPct(row.targetWeight)}</td>
                           <td className="px-4 py-3 font-mono text-bone-300">{formatCurrency(row.targetValue, manualCurrency)}</td>
+                          <td className="px-4 py-3 font-mono text-bone-300">{formatCurrency(row.oneLotNotional, manualCurrency)}</td>
                           <td className="px-4 py-3 font-mono text-bone-300">{formatNumber(row.lastClose, 3)}</td>
                           <td className="px-4 py-3 font-mono text-bone-300">{formatShares(row.theoreticalShares)}</td>
                           <td className="px-4 py-3 font-mono text-bone-50">{row.desiredShares}</td>
@@ -583,7 +585,7 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                           <td className={`px-4 py-3 font-mono text-[11px] uppercase tracking-[0.14em] ${Number(row.orderShares || 0) > 0 ? 'text-lamp-300' : 'text-bone-400'}`}>{manualActionLabel(row)}</td>
                           <td className="px-4 py-3 text-xs text-bone-500">{manualBlockedReason(row.blockedReason)}</td>
                         </tr>
-                      )) : <tr><td colSpan={10} className="px-4 py-4 text-bone-500">{copy.labels.empty}</td></tr>}
+                      )) : <tr><td colSpan={11} className="px-4 py-4 text-bone-500">{copy.labels.empty}</td></tr>}
                     </tbody>
                   </table>
                 </div>
