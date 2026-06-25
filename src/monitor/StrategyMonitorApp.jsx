@@ -250,6 +250,8 @@ const manualActionLabel = (row) => {
     || row?.blockedReason === 'native_signal_stale'
     || row?.blockedReason === 'native_lineage_stale'
   ) return 'STALE';
+  if (row?.orderSide === 'sell' || row?.tradeAction === 'sell') return Number(row?.orderShares || 0) > 0 ? 'SELL' : 'NO ORDER';
+  if (row?.orderSide === 'buy' || row?.tradeAction === 'buy') return Number(row?.orderShares || 0) > 0 ? 'BUY' : 'NO ORDER';
   if (Number(row?.orderShares || 0) > 0) return 'BUY';
   if (Number(row?.targetWeight || 0) > 0) return 'NO ORDER';
   return 'NO TARGET';
@@ -260,6 +262,7 @@ const manualBlockedReason = (reason) => ({
   native_lineage_stale: 'upstream lineage stale; regenerate full chain first',
   target_value_below_one_lot: 'target value below one board lot',
   target_value_below_min_trade: 'target value below minimum trade',
+  insufficient_cash_or_lot: 'insufficient cash or board lot',
   missing_latest_price: 'missing latest price',
 }[reason] || reason || 'not blocked');
 
@@ -568,7 +571,8 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                     )}
                   </div>
                   <div className="grid min-w-[260px] gap-2 rounded-lg border border-ink-700/70 bg-ink-950/40 p-3 font-mono text-xs">
-                    <div className="flex justify-between gap-4"><span className="text-bone-500">Capital</span><span className="text-bone-100">{formatCurrency(manualSheet?.account?.capital, manualCurrency)}</span></div>
+                    <div className="flex justify-between gap-4"><span className="text-bone-500">Equity</span><span className="text-bone-100">{formatCurrency(manualSheet?.account?.equity ?? manualSheet?.account?.capital, manualCurrency)}</span></div>
+                    <div className="flex justify-between gap-4"><span className="text-bone-500">Cash</span><span className="text-bone-100">{formatCurrency(manualSheet?.account?.cash, manualCurrency)}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Target gross</span><span className="text-bone-100">{formatPct(manualSheet?.summary?.targetGrossWeight)}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Target value</span><span className="text-bone-100">{formatCurrency(manualSheet?.summary?.targetValue, manualCurrency)}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Current lots</span><span className="text-bone-100">{formatLots(manualSheet?.summary?.currentLots ?? 0)}</span></div>
@@ -612,7 +616,7 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                           <td className="px-4 py-3 font-mono text-bone-50">{formatLots(row.currentLots ?? Number(row.currentShares || 0) / Number(manualSheet?.account?.lotSize || 100))}</td>
                           <td className="px-4 py-3 font-mono text-bone-50">{formatLots(row.targetLots ?? Number(row.desiredShares || 0) / Number(manualSheet?.account?.lotSize || 100))}</td>
                           <td className="px-4 py-3 font-mono text-bone-50">{formatLots(row.orderLots ?? Number(row.orderShares || 0) / Number(manualSheet?.account?.lotSize || 100))}</td>
-                          <td className={`px-4 py-3 font-mono text-[11px] uppercase tracking-[0.14em] ${Number(row.orderShares || 0) > 0 ? 'text-lamp-300' : 'text-bone-400'}`}>{manualActionLabel(row)}</td>
+                          <td className={`px-4 py-3 font-mono text-[11px] uppercase tracking-[0.14em] ${Number(row.orderShares || 0) > 0 ? (row.orderSide === 'sell' ? 'text-red-200' : 'text-lamp-300') : 'text-bone-400'}`}>{manualActionLabel(row)}</td>
                           <td className="px-4 py-3 text-xs text-bone-500">{manualBlockedReason(row.blockedReason)}</td>
                         </tr>
                       )) : <tr><td colSpan={12} className="px-4 py-4 text-bone-500">{copy.labels.empty}</td></tr>}
@@ -620,7 +624,7 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                   </table>
                 </div>
                 <p className="mt-4 text-xs leading-relaxed text-bone-500">
-                  First manual run assumes zero current shares/lots. Place only listed order lots when the native signal and its full upstream lineage are fresh; stale rows are observation-only.
+                  Live-bootstrap gray account starts from 50,000 CNY cash and zero positions at launch, then reads current paper-account shares/lots for every refresh. Place only listed order lots when the native signal and full upstream lineage are fresh; stale rows are observation-only.
                 </p>
               </section>
             </Reveal>
