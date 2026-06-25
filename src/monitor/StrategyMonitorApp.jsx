@@ -578,6 +578,7 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Current lots</span><span className="text-bone-100">{formatLots(manualSheet?.summary?.currentLots ?? 0)}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Target lots</span><span className="text-bone-100">{formatLots(manualSheet?.summary?.targetLots ?? 0)}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Order lots</span><span className={Number(manualSheet?.summary?.orderLots || 0) > 0 ? 'text-lamp-300' : 'text-bone-300'}>{formatLots(manualSheet?.summary?.orderLots ?? 0)}</span></div>
+                    <div className="flex justify-between gap-4"><span className="text-bone-500">Gap buffer</span><span className="text-bone-100">{formatNumber(Number(manualSheet?.account?.priceGapBufferBps || 0) / 100, 2)}%</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Native stale</span><span className={manualNativeStale ? 'text-red-200' : 'text-bone-300'}>{manualNativeStale ? `YES / ${manualNativeStaleDays}d` : 'NO'}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Native lineage</span><span className={manualLineageStale ? 'text-red-200' : 'text-bone-300'}>{manualLineageStale ? `${manualLineageStaleNodes}/${manualLineageNodes} stale` : 'Fresh'}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Signal</span><span className="text-bone-100">{manualSheet?.signal?.nativeSignalDate || '—'}</span></div>
@@ -586,7 +587,7 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                   </div>
                 </div>
                 <div className="mt-5 overflow-x-auto rounded-lg border border-ink-700/70 bg-ink-950/35">
-                  <table className="w-full min-w-[1420px] text-left text-sm">
+                  <table className="w-full min-w-[1580px] text-left text-sm">
                     <thead className="font-mono text-[10px] uppercase tracking-[0.20em] text-bone-500">
                       <tr className="border-b border-ink-700/60">
                         <th className="px-4 py-3 font-normal">Code</th>
@@ -595,6 +596,8 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                         <th className="px-4 py-3 font-normal">Target Value</th>
                         <th className="px-4 py-3 font-normal">One Lot Value</th>
                         <th className="px-4 py-3 font-normal">Last Close</th>
+                        <th className="px-4 py-3 font-normal">Plan Px</th>
+                        <th className="px-4 py-3 font-normal">Max Buy Px</th>
                         <th className="px-4 py-3 font-normal">Theoretical</th>
                         <th className="px-4 py-3 font-normal">Current Lots</th>
                         <th className="px-4 py-3 font-normal">Target Lots</th>
@@ -612,6 +615,8 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                           <td className="px-4 py-3 font-mono text-bone-300">{formatCurrency(row.targetValue, manualCurrency)}</td>
                           <td className="px-4 py-3 font-mono text-bone-300">{formatCurrency(row.oneLotNotional, manualCurrency)}</td>
                           <td className="px-4 py-3 font-mono text-bone-300">{formatNumber(row.lastClose, 3)}</td>
+                          <td className="px-4 py-3 font-mono text-bone-300">{formatNumber(row.orderSide === 'sell' ? row.sellPlanningPrice : row.buyPlanningPrice, 3)}</td>
+                          <td className="px-4 py-3 font-mono text-bone-300">{formatNumber(row.maxAffordableBuyPrice, 3)}</td>
                           <td className="px-4 py-3 font-mono text-bone-300">{formatShares(row.theoreticalShares)}</td>
                           <td className="px-4 py-3 font-mono text-bone-50">{formatLots(row.currentLots ?? Number(row.currentShares || 0) / Number(manualSheet?.account?.lotSize || 100))}</td>
                           <td className="px-4 py-3 font-mono text-bone-50">{formatLots(row.targetLots ?? Number(row.desiredShares || 0) / Number(manualSheet?.account?.lotSize || 100))}</td>
@@ -619,12 +624,12 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                           <td className={`px-4 py-3 font-mono text-[11px] uppercase tracking-[0.14em] ${Number(row.orderShares || 0) > 0 ? (row.orderSide === 'sell' ? 'text-red-200' : 'text-lamp-300') : 'text-bone-400'}`}>{manualActionLabel(row)}</td>
                           <td className="px-4 py-3 text-xs text-bone-500">{manualBlockedReason(row.blockedReason)}</td>
                         </tr>
-                      )) : <tr><td colSpan={12} className="px-4 py-4 text-bone-500">{copy.labels.empty}</td></tr>}
+                      )) : <tr><td colSpan={14} className="px-4 py-4 text-bone-500">{copy.labels.empty}</td></tr>}
                     </tbody>
                   </table>
                 </div>
                 <p className="mt-4 text-xs leading-relaxed text-bone-500">
-                  Live-bootstrap gray account starts from 50,000 CNY cash and zero positions at launch, then reads current paper-account shares/lots for every refresh. Place only listed order lots when the native signal and full upstream lineage are fresh; stale rows are observation-only.
+                  Live-bootstrap gray account starts from 50,000 CNY cash and zero positions at launch, then reads current paper-account shares/lots for every refresh. Buy lots are sized with the displayed gap buffer; if the real opening executable price is above Max Buy Px, reduce one lot and recheck or skip. Stale rows are observation-only.
                 </p>
               </section>
             </Reveal>
