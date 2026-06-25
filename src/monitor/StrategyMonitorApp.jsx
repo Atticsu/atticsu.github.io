@@ -399,6 +399,7 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
   const manualRows = manualSheet?.holdings || [];
   const manualAttribution = manualSheet?.attribution || null;
   const manualAttributionRules = manualAttribution?.rules || [];
+  const manualStrategyLogic = manualSheet?.strategyLogic || null;
   const manualCurrency = manualSheet?.account?.currency || currency;
   const manualPlanRows = manualRows.filter((row) => (
     row.isPlannedHolding || Number(row.targetWeight || 0) > 0 || Number(row.orderShares || 0) !== 0
@@ -635,6 +636,38 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                       ))}
                     </div>
                   </div>
+                )}
+                {manualStrategyLogic && (
+                  <details className="mt-5 rounded-lg border border-ink-700/70 bg-ink-950/35 p-4">
+                    <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[0.24em] text-lamp-500 marker:hidden">
+                      Strategy Logic
+                    </summary>
+                    <div className="mt-4 grid gap-4">
+                      <div>
+                        <h3 className="font-display text-2xl text-bone-50">{manualStrategyLogic.title}</h3>
+                        <p className="mt-2 max-w-4xl text-sm leading-relaxed text-bone-300">{manualStrategyLogic.summary}</p>
+                      </div>
+                      <div className="grid gap-3 rounded-lg border border-ink-700/60 bg-ink-900/45 p-4 font-mono text-[11px] md:grid-cols-4">
+                        <div><p className="text-bone-500">Current signal</p><p className="mt-1 text-bone-200">{manualStrategyLogic.currentSelection?.signalDate || '-'}</p></div>
+                        <div><p className="text-bone-500">Selected legs</p><p className="mt-1 text-lamp-300">{(manualStrategyLogic.currentSelection?.selectedLegs || []).join(', ') || '-'}</p></div>
+                        <div><p className="text-bone-500">Max score</p><p className="mt-1 text-bone-200">{formatNumber(manualStrategyLogic.currentSelection?.maxScore, 3)}</p></div>
+                        <div><p className="text-bone-500">Source pool</p><p className="mt-1 text-bone-200">{(manualStrategyLogic.currentSelection?.sourceUniverse || []).join(', ') || '-'}</p></div>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        {(manualStrategyLogic.steps || []).map((step) => (
+                          <article key={step.label} className="rounded-lg border border-ink-700/60 bg-ink-900/45 p-4">
+                            <h4 className="text-sm font-semibold text-bone-100">{step.label}</h4>
+                            <p className="mt-2 text-xs leading-relaxed text-bone-400">{step.text}</p>
+                          </article>
+                        ))}
+                      </div>
+                      {Array.isArray(manualStrategyLogic.notes) && manualStrategyLogic.notes.length > 0 && (
+                        <ul className="grid gap-2 text-xs leading-relaxed text-bone-500">
+                          {manualStrategyLogic.notes.map((note) => <li key={note}>{note}</li>)}
+                        </ul>
+                      )}
+                    </div>
+                  </details>
                 )}
                 <div className="mt-5 overflow-x-auto rounded-lg border border-ink-700/70 bg-ink-950/35">
                   <table className="w-full min-w-[1580px] text-left text-sm">
