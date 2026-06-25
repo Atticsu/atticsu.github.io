@@ -239,6 +239,11 @@ const formatShares = (value, digits = 1) => {
   return Number(value).toFixed(digits);
 };
 
+const formatLots = (value) => {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return '-';
+  return String(Math.trunc(Number(value)));
+};
+
 const manualActionLabel = (row) => {
   if (
     row?.tradeAction === 'stale_signal_no_order'
@@ -383,7 +388,8 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
   ));
   const manualPlanCount = manualSheet?.summary?.plannedHoldingCount ?? manualPlanRows.filter((row) => Number(row.targetWeight || 0) > 0).length;
   const manualPlanOnlyCount = manualSheet?.summary?.planOnlyCount ?? manualPlanRows.filter((row) => Number(row.targetWeight || 0) > 0 && Number(row.orderShares || 0) === 0).length;
-  const manualNativeStale = Boolean(manualSheet?.signal?.nativeSignalStale);
+  const manualCarryForward = Boolean(manualSheet?.signal?.nativeSignalCarryForward);
+  const manualNativeStale = Boolean(manualSheet?.signal?.nativeSignalStale) && !manualCarryForward;
   const manualNativeStaleDays = manualSheet?.signal?.nativeSignalStaleDays ?? 0;
   const manualLineageStale = Boolean(manualSheet && manualSheet?.signal?.nativeLineageFresh === false);
   const manualLineageStaleNodes = manualSheet?.signal?.nativeLineageStaleNodeCount ?? 0;
@@ -565,6 +571,9 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Capital</span><span className="text-bone-100">{formatCurrency(manualSheet?.account?.capital, manualCurrency)}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Target gross</span><span className="text-bone-100">{formatPct(manualSheet?.summary?.targetGrossWeight)}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Target value</span><span className="text-bone-100">{formatCurrency(manualSheet?.summary?.targetValue, manualCurrency)}</span></div>
+                    <div className="flex justify-between gap-4"><span className="text-bone-500">Current lots</span><span className="text-bone-100">{formatLots(manualSheet?.summary?.currentLots ?? 0)}</span></div>
+                    <div className="flex justify-between gap-4"><span className="text-bone-500">Target lots</span><span className="text-bone-100">{formatLots(manualSheet?.summary?.targetLots ?? 0)}</span></div>
+                    <div className="flex justify-between gap-4"><span className="text-bone-500">Order lots</span><span className={Number(manualSheet?.summary?.orderLots || 0) > 0 ? 'text-lamp-300' : 'text-bone-300'}>{formatLots(manualSheet?.summary?.orderLots ?? 0)}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Native stale</span><span className={manualNativeStale ? 'text-red-200' : 'text-bone-300'}>{manualNativeStale ? `YES / ${manualNativeStaleDays}d` : 'NO'}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Native lineage</span><span className={manualLineageStale ? 'text-red-200' : 'text-bone-300'}>{manualLineageStale ? `${manualLineageStaleNodes}/${manualLineageNodes} stale` : 'Fresh'}</span></div>
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Signal</span><span className="text-bone-100">{manualSheet?.signal?.nativeSignalDate || '—'}</span></div>
@@ -573,7 +582,7 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                   </div>
                 </div>
                 <div className="mt-5 overflow-x-auto rounded-lg border border-ink-700/70 bg-ink-950/35">
-                  <table className="w-full min-w-[1260px] text-left text-sm">
+                  <table className="w-full min-w-[1420px] text-left text-sm">
                     <thead className="font-mono text-[10px] uppercase tracking-[0.20em] text-bone-500">
                       <tr className="border-b border-ink-700/60">
                         <th className="px-4 py-3 font-normal">Code</th>
@@ -583,8 +592,9 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                         <th className="px-4 py-3 font-normal">One Lot Value</th>
                         <th className="px-4 py-3 font-normal">Last Close</th>
                         <th className="px-4 py-3 font-normal">Theoretical</th>
-                        <th className="px-4 py-3 font-normal">Board Lot</th>
-                        <th className="px-4 py-3 font-normal">Order</th>
+                        <th className="px-4 py-3 font-normal">Current Lots</th>
+                        <th className="px-4 py-3 font-normal">Target Lots</th>
+                        <th className="px-4 py-3 font-normal">Order Lots</th>
                         <th className="px-4 py-3 font-normal">Action</th>
                         <th className="px-4 py-3 font-normal">Reason</th>
                       </tr>
@@ -599,17 +609,18 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                           <td className="px-4 py-3 font-mono text-bone-300">{formatCurrency(row.oneLotNotional, manualCurrency)}</td>
                           <td className="px-4 py-3 font-mono text-bone-300">{formatNumber(row.lastClose, 3)}</td>
                           <td className="px-4 py-3 font-mono text-bone-300">{formatShares(row.theoreticalShares)}</td>
-                          <td className="px-4 py-3 font-mono text-bone-50">{row.desiredShares}</td>
-                          <td className="px-4 py-3 font-mono text-bone-50">{row.orderShares}</td>
+                          <td className="px-4 py-3 font-mono text-bone-50">{formatLots(row.currentLots ?? Number(row.currentShares || 0) / Number(manualSheet?.account?.lotSize || 100))}</td>
+                          <td className="px-4 py-3 font-mono text-bone-50">{formatLots(row.targetLots ?? Number(row.desiredShares || 0) / Number(manualSheet?.account?.lotSize || 100))}</td>
+                          <td className="px-4 py-3 font-mono text-bone-50">{formatLots(row.orderLots ?? Number(row.orderShares || 0) / Number(manualSheet?.account?.lotSize || 100))}</td>
                           <td className={`px-4 py-3 font-mono text-[11px] uppercase tracking-[0.14em] ${Number(row.orderShares || 0) > 0 ? 'text-lamp-300' : 'text-bone-400'}`}>{manualActionLabel(row)}</td>
                           <td className="px-4 py-3 text-xs text-bone-500">{manualBlockedReason(row.blockedReason)}</td>
                         </tr>
-                      )) : <tr><td colSpan={11} className="px-4 py-4 text-bone-500">{copy.labels.empty}</td></tr>}
+                      )) : <tr><td colSpan={12} className="px-4 py-4 text-bone-500">{copy.labels.empty}</td></tr>}
                     </tbody>
                   </table>
                 </div>
                 <p className="mt-4 text-xs leading-relaxed text-bone-500">
-                  First manual run assumes zero current shares. Place only listed board-lot orders when the native signal and its full upstream lineage are fresh; stale rows are observation-only.
+                  First manual run assumes zero current shares/lots. Place only listed order lots when the native signal and its full upstream lineage are fresh; stale rows are observation-only.
                 </p>
               </section>
             </Reveal>
