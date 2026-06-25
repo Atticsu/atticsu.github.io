@@ -266,6 +266,18 @@ const manualBlockedReason = (reason) => ({
   missing_latest_price: 'missing latest price',
 }[reason] || reason || 'not blocked');
 
+const attributionStatusClass = (status) => ({
+  blocked: 'border-red-400/30 bg-red-500/[0.055] text-red-200',
+  active: 'border-lamp-500/35 bg-lamp-500/[0.075] text-lamp-300',
+  defensive: 'border-blue-400/25 bg-blue-500/[0.055] text-blue-200',
+  risk_on: 'border-lamp-500/35 bg-lamp-500/[0.075] text-lamp-300',
+  ready: 'border-lamp-500/35 bg-lamp-500/[0.075] text-lamp-300',
+  clear: 'border-bone-600/35 bg-bone-50/[0.035] text-bone-300',
+  inactive: 'border-bone-700/40 bg-ink-950/35 text-bone-400',
+  normal: 'border-bone-700/40 bg-ink-950/35 text-bone-400',
+  no_target: 'border-bone-700/40 bg-ink-950/35 text-bone-400',
+}[status] || 'border-bone-700/40 bg-ink-950/35 text-bone-400');
+
 const toIsoDate = (date) => date.toISOString().slice(0, 10);
 
 const fetchJson = async (url) => {
@@ -385,6 +397,8 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
   const pendingOrders = bundle?.pendingOrders || [];
   const orders = bundle?.orders || [];
   const manualRows = manualSheet?.holdings || [];
+  const manualAttribution = manualSheet?.attribution || null;
+  const manualAttributionRules = manualAttribution?.rules || [];
   const manualCurrency = manualSheet?.account?.currency || currency;
   const manualPlanRows = manualRows.filter((row) => (
     row.isPlannedHolding || Number(row.targetWeight || 0) > 0 || Number(row.orderShares || 0) !== 0
@@ -586,6 +600,42 @@ const StrategyMonitorApp = ({ language = 'en', setLanguage }) => {
                     <div className="flex justify-between gap-4"><span className="text-bone-500">Executable</span><span className={manualSheet?.signal?.hasExecutableOrder ? 'text-lamp-300' : 'text-bone-300'}>{manualSheet?.signal?.hasExecutableOrder ? 'YES' : 'NO'}</span></div>
                   </div>
                 </div>
+                {manualAttribution && (
+                  <div className="mt-5 rounded-lg border border-ink-700/70 bg-ink-950/35 p-4">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                      <div>
+                        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-lamp-500">Rule Attribution</p>
+                        <p className="mt-2 text-sm leading-relaxed text-bone-300">{manualAttribution.summary}</p>
+                      </div>
+                      <span className={`inline-flex w-fit items-center rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] ${attributionStatusClass(manualAttribution?.decision?.status)}`}>
+                        {manualAttribution?.decision?.label || 'Decision'}
+                      </span>
+                    </div>
+                    <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                      {manualAttributionRules.map((rule) => (
+                        <article key={rule.id || rule.title} className="rounded-lg border border-ink-700/70 bg-ink-900/45 p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <h3 className="text-sm font-semibold text-bone-100">{rule.title}</h3>
+                            <span className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em] ${attributionStatusClass(rule.status)}`}>
+                              {rule.statusLabel || rule.status}
+                            </span>
+                          </div>
+                          <p className="mt-3 text-xs leading-relaxed text-bone-400">{rule.detail}</p>
+                          {Array.isArray(rule.metrics) && rule.metrics.length > 0 && (
+                            <dl className="mt-4 grid gap-2 border-t border-ink-700/60 pt-3">
+                              {rule.metrics.map((metric) => (
+                                <div key={`${rule.id}-${metric.label}`} className="flex justify-between gap-3 font-mono text-[10px]">
+                                  <dt className="text-bone-500">{metric.label}</dt>
+                                  <dd className="text-bone-200">{metric.value}</dd>
+                                </div>
+                              ))}
+                            </dl>
+                          )}
+                        </article>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="mt-5 overflow-x-auto rounded-lg border border-ink-700/70 bg-ink-950/35">
                   <table className="w-full min-w-[1580px] text-left text-sm">
                     <thead className="font-mono text-[10px] uppercase tracking-[0.20em] text-bone-500">
